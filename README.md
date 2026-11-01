@@ -42,13 +42,25 @@ swarmsight serve --mock          # http://127.0.0.1:8000
 
 ### Using Claude
 
-Set an Anthropic API key and drop `--mock`:
+Set an Anthropic API key (from [console.anthropic.com](https://console.anthropic.com)) and drop `--mock`.
+
+macOS / Linux:
 
 ```bash
-export ANTHROPIC_API_KEY=sk-ant-...
-swarmsight run examples/harborview_congestion.md -q "..." -r 10
+export ANTHROPIC_API_KEY=sk-ant-your-key
 swarmsight serve
 ```
+
+Windows PowerShell:
+
+```powershell
+$env:ANTHROPIC_API_KEY = "sk-ant-your-key"   # this window only
+swarmsight serve
+```
+
+Windows Command Prompt: `set ANTHROPIC_API_KEY=sk-ant-your-key`. To keep the key across new windows on Windows, run `setx ANTHROPIC_API_KEY "sk-ant-your-key"` once, then open a new window. (In PowerShell, `set NAME=value` does **not** set an environment variable.)
+
+The same applies to the CLI: `swarmsight run examples/harborview_congestion.md -q "..." -r 10`.
 
 With no flag, SwarmSight uses Claude when it finds credentials and falls back to the offline mock otherwise. The header of the web UI shows which one is active.
 

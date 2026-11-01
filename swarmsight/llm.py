@@ -119,7 +119,8 @@ _STOP = {
     "Its", "His", "Her", "Their", "Local",
 }
 _TITLES = {"Mayor", "Councillor", "Councilor", "Professor", "Dr", "Mr", "Ms", "Mrs", "Senator",
-           "Minister", "President", "Governor", "Judge", "Chief", "Director", "Union"}
+           "Minister", "President", "Governor", "Judge", "Chief", "Director", "Union",
+           "Consultant", "Engineer", "Analyst", "Chairman", "Chairperson", "Founder", "Officer", "Shri", "Smt"}
 _ORG_HINTS = ("Inc", "Corp", "Council", "Ministry", "Bank", "Union", "Agency", "Board",
               "Committee", "Party", "University", "Association", "Group", "Times", "News",
               "Institute", "Authority", "Company", "Labs", "Fund", "Department", "Federation")
@@ -127,11 +128,33 @@ _GROUP_HINTS = ("Residents", "Workers", "Students", "Parents", "Voters", "Farmer
                 "Investors", "Customers", "Members", "Owners", "Coalition", "Alliance", "Network")
 _PLACE_HINTS = ("City", "County", "Street", "River", "Valley", "District", "Province", "Port",
                 "Harbor", "Bay", "Park", "Square")
-_POS = {"support", "supports", "back", "backs", "welcome", "welcomes", "benefit", "growth", "praise",
-        "praised", "approve", "approved", "boost", "jobs", "endorse", "endorsed", "favor", "agree"}
+# Names that look like proper nouns but are metrics, units, rules or documents, never actors.
+_CONCEPT_HINTS = {"Rule", "Rules", "Act", "Policy", "Standard", "Standards", "Rate", "Return", "Returns",
+                  "Cost", "Costs", "Revenue", "Margin", "Margins", "Capex", "Opex", "Price", "Prices",
+                  "Tariff", "Permit", "License", "Licence", "Plan", "Report", "Study", "Test", "Project",
+                  "Projected", "Process", "Scheme", "Tax", "Duty", "Loan", "Grant", "Budget", "Forecast",
+                  "Profit", "Loss", "Sales", "Volume", "Capacity", "Demand", "Supply", "Stage", "Phase"}
+_METRIC_ACRONYMS = {"IRR", "NPV", "ROI", "ROE", "ROCE", "EBITDA", "EBIT", "CAGR", "DSCR", "GST", "VAT",
+                    "KPI", "OKR", "FY", "YOY", "QOQ", "MT", "TPD", "TPA", "KG", "KL", "MW", "KW", "KWH",
+                    "INR", "USD", "EUR", "GBP", "ISI", "ISO", "LOI", "MOU", "NDA", "SOP", "PPE", "COD",
+                    "BOD", "TDS", "PH", "PDF", "CEO", "CFO", "CTO", "HQ", "AM", "PM", "TBD", "NA", "OK"}
+# Inflected forms are listed explicitly; the mock does no stemming.
+_POS = {"support", "supports", "supported", "supporting", "back", "backs", "backed", "welcome",
+        "welcomes", "welcomed", "benefit", "benefits", "growth", "grow", "grows", "praise", "praised",
+        "approve", "approves", "approved", "approval", "boost", "boosts", "jobs", "endorse", "endorses",
+        "endorsed", "favor", "favour", "favourable", "favorable", "agree", "agrees", "agreed", "pass",
+        "passes", "passed", "meet", "meets", "met", "compliant", "grant", "grants", "granted", "clear",
+        "clears", "cleared", "success", "successful", "succeeds", "profit", "profitable", "viable",
+        "strong", "secure", "secured", "signed", "win", "wins", "won", "gain", "gains", "positive",
+        "opportunity", "interested", "commit", "commits", "committed", "confirm", "confirms", "confirmed"}
 _NEG = {"oppose", "opposes", "opposed", "against", "protest", "protests", "criticize", "criticized",
-        "concern", "concerns", "risk", "risks", "reject", "rejected", "fear", "fears", "warn", "warned",
-        "harm", "cost", "costs", "anger", "angry", "lawsuit", "sue", "block", "delay"}
+        "criticise", "criticised", "concern", "concerns", "concerned", "risk", "risks", "risky", "reject",
+        "rejects", "rejected", "rejection", "fear", "fears", "feared", "warn", "warns", "warned", "harm",
+        "harmful", "cost", "costs", "costly", "anger", "angry", "lawsuit", "sue", "sues", "block", "blocks",
+        "blocked", "delay", "delays", "delayed", "fail", "fails", "failed", "failure", "deny", "denies",
+        "denied", "refuse", "refuses", "refused", "penalty", "penalties", "violation", "violates", "loss",
+        "losses", "decline", "declines", "declined", "weak", "uncertain", "uncertainty", "shortage",
+        "negative", "problem", "problems", "dispute", "doubt", "doubts", "unviable", "withdraw", "withdrew"}
 
 
 def _seed_int(*parts: str) -> int:
@@ -150,8 +173,11 @@ def _lexicon_score(text: str) -> float:
 
 
 def _classify(name: str) -> str:
-    last = name.split()[-1]
-    if any(h in name for h in _ORG_HINTS) or name.isupper():
+    words = name.split()
+    last = words[-1]
+    if name in _METRIC_ACRONYMS or any(w in _CONCEPT_HINTS or w in _METRIC_ACRONYMS for w in words):
+        return "concept"
+    if any(h in name for h in _ORG_HINTS) or (name.isupper() and len(name) >= 3):
         return "organization"
     if last in _GROUP_HINTS or name.endswith("s") and last in _GROUP_HINTS:
         return "group"
@@ -309,7 +335,7 @@ class MockLLM:
         confidence = round(min(0.9, 0.35 + abs(end) * 0.6), 2)
         p_yes = round(max(0.05, min(0.95, 0.5 + end / 2)), 2)
         return Report(
-            headline=f"Outcome looks {leaning}",
+            headline=f"[Mock demo, not AI] Outcome looks {leaning}",
             prediction=(f"For \"{question}\": the simulated population ended at mean stance {end:+.2f} "
                         f"(started {start:+.2f}); {support:.0%} support vs {oppose:.0%} oppose."),
             confidence=confidence,
@@ -321,7 +347,9 @@ class MockLLM:
                 Scenario(name="No", probability=round(1 - p_yes, 2),
                          description="Opponents block or stall the outcome."),
             ],
-            risks=["Mock mode: heuristic agents, not a language model"],
+            risks=["MOCK MODE: these agents follow simple word-matching rules, not a language model. "
+                   "They do not understand the seed material. Use this run to try the app, not to make a "
+                   "decision. Set ANTHROPIC_API_KEY for a real simulation."],
         )
 
 

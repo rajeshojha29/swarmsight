@@ -18,6 +18,9 @@ def _run(args: argparse.Namespace) -> int:
     llm = get_llm("mock" if args.mock else args.llm)
     seed = Path(args.seed).read_text(encoding="utf-8")
     print(f"LLM: {llm.name}")
+    if llm.name == "mock":
+        print("Note: mock mode uses word-matching rules, not AI. Results are for trying the app only.",
+              file=sys.stderr)
 
     graph = build_graph(seed, llm)
     print(f"Graph: {len(graph.entities)} entities, {len(graph.relations)} relations")

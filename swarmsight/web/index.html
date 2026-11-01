@@ -67,6 +67,7 @@ th { color: var(--muted); font-weight: 500; font-size: 12px; }
 .msg.user { align-self: flex-end; background: var(--accent); color: var(--accent-ink); }
 .msg.assistant { align-self: flex-start; background: var(--chip); }
 .err { color: var(--neg); font-size: 12px; }
+.mockbar { display: none; padding: 8px 20px; background: var(--event); color: var(--event-ink); font-size: 13px; border-bottom: 1px solid var(--line); }
 .pos { color: var(--pos); } .neg { color: var(--neg); }
 @media (max-width: 800px) {
   main { grid-template-columns: 1fr; }
@@ -80,6 +81,7 @@ th { color: var(--muted); font-weight: 500; font-size: 12px; }
 </head>
 <body>
 <header><h1>SwarmSight</h1><span class="tag">rehearse the future with a swarm of agents</span><span class="llm" id="llm"></span></header>
+<div class="mockbar" id="mockbar"><strong>Mock mode, not AI.</strong> Agents follow simple word-matching rules and do not understand your material. Results are for trying the app only. Set <code>ANTHROPIC_API_KEY</code> and restart for a real simulation.</div>
 <main>
 <aside>
   <h2>New simulation</h2>
@@ -334,7 +336,10 @@ async function send() {
   drawChat();
 }
 
-api("/api/health").then(h => $("#llm").textContent = `LLM: ${h.llm}`);
+api("/api/health").then(h => {
+  $("#llm").textContent = `LLM: ${h.llm}`;
+  if (h.llm === "mock") $("#mockbar").style.display = "block";
+});
 refreshList();
 if (location.hash.length > 1) {
   const [id, tab] = location.hash.slice(1).split("/");
